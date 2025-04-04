@@ -41,6 +41,7 @@ func main() {
 	targetPtr := flag.String("target", target, "Target IP address or hostname")
 	startPort := flag.Int("start-port", 1, "Start of port range to scan")
 	endPort := flag.Int("end-port", 1024, "End of port range to scan")
+	workers := flag.Int("workers", 100, "Number of concurrent scanning workers")
 	flag.Parse()
 
 	// Validate required flags
@@ -56,18 +57,22 @@ func main() {
 		return
 	}
 
+	if *workers < 1 {
+		fmt.Println("Error: -workers must be at least 1")
+		return
+	}
+
 	var wg sync.WaitGroup
 	tasks := make(chan string, 100)
 
-    //target := "scanme.nmap.org"
+   
 
 	dialer := net.Dialer {
 		Timeout: 5 * time.Second,
 	}
   
-	workers := 100
 
-    for i := 1; i <= workers; i++ {
+    for i := 1; i <= *workers; i++ {
 		wg.Add(1)
 		go worker(&wg, tasks, dialer)
 	}
