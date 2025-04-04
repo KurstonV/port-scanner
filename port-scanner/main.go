@@ -36,14 +36,23 @@ func worker(wg *sync.WaitGroup, tasks chan string, dialer net.Dialer) {
 }
 
 func main() {
-	// Define and parse the target flag
-	target := flag.String("target", "", "scanme.nmap.org")
+	// Define command-line flags
+	target := "scanme.nmap.org"
+	targetPtr := flag.String("target", target, "Target IP address or hostname")
+	startPort := flag.Int("start-port", 1, "Start of port range to scan")
+	endPort := flag.Int("end-port", 1024, "End of port range to scan")
 	flag.Parse()
 
-	// Require target
-	if *target == "" {
+	// Validate required flags
+	if *targetPtr == "" {
 		fmt.Println("Error: -target is required")
 		flag.Usage()
+		return
+	}
+
+	// Validate port range
+	if *startPort < 1 || *endPort > 65535 || *startPort > *endPort {
+		fmt.Println("Error: Invalid port range")
 		return
 	}
 
@@ -63,11 +72,11 @@ func main() {
 		go worker(&wg, tasks, dialer)
 	}
 
-	ports := 512
+	//ports := 512
 
-	for p := 1; p <= ports; p++ {
+	for p := *startPort; p <= *endPort; p++ {
 		port := strconv.Itoa(p)
-        address := net.JoinHostPort(*target, port)
+        address := net.JoinHostPort(*targetPtr, port)
 		tasks <- address
 	}
 	close(tasks)
