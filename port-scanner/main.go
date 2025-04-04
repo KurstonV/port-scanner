@@ -47,7 +47,9 @@ func main() {
 	startPort := flag.Int("start-port", 1, "Start of port range to scan")
 	endPort := flag.Int("end-port", 1024, "End of port range to scan")
 	workers := flag.Int("workers", 100, "Number of concurrent scanning workers")
+	timeout := flag.Float64("timeout", 3.0, "Connection timeout in seconds")
 	flag.Parse()
+
 
 	// Validate required flags
 	if *targetPtr == "" {
@@ -62,8 +64,15 @@ func main() {
 		return
 	}
 
+	// Validate workers flag
 	if *workers < 1 {
 		fmt.Println("Error: -workers must be at least 1")
+		return
+	}
+
+	// Validate timeout flag
+	if *timeout <= 0 {
+		fmt.Println("Error: -timeout must be greater than 0")
 		return
 	}
 
@@ -74,9 +83,9 @@ func main() {
 	openPorts := make(chan int, *endPort - *startPort + 1) // to track open ports
 
    
-
-	dialer := net.Dialer {
-		Timeout: 5 * time.Second,
+	// Use timeout flag
+	dialer := net.Dialer{
+		Timeout: time.Duration(*timeout * float64(time.Second)),
 	}
   
 	// Start workers
